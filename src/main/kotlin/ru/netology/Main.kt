@@ -14,18 +14,26 @@ fun main() {
     ChatService.add(2, Message("Привет4"))
     println("--------------")
     //println("Количество непрочитанных чатов: ${ChatService.getUnreadChatsCount()}")
-    println(ChatService.deleteMessage(2, 8))
-    println(ChatService.getChatMessages(2, 3))
+    println("Удаление сообщения ${ChatService.deleteMessage(2, 9)}")
     println("--------------")
-    ///println("Восстановление сообщения ${ChatService.restoreMessage(2, 4)}")
+    println(ChatService.getChatList())
     println("--------------")
     //println(ChatService.getChatMessages(2, 3))
     println("--------------")
-    //println("Удаление чата ${ChatService.deleteChat(2)} ")
+    println("Восстановление сообщения ${ChatService.restoreMessage(2, 9)}")
     println("--------------")
+    println(ChatService.getChatList())
+    //ChatService.printChats()
+    println("--------------")
+    ///println("Восстановление сообщения ${ChatService.restoreMessage(2, 4)}")
+    //println("--------------")
+    //println(ChatService.getChatMessages(2, 3))
+    //println("--------------")
+    //println("Удаление чата ${ChatService.deleteChat(2)} ")
+    //println("--------------")
     //println(ChatService.getChatMessages(1, 3))
     //println(ChatService.getChatMessages(3, 3))
-    println("--------------")
+    //println("--------------")
     //println("Количество непрочитанных чатов: ${ChatService.getUnreadChatsCount()}")
     //ChatService.printChats()
     //println(ChatService.getChatList())
@@ -55,8 +63,8 @@ data class Chat(
 
 data class Message(
     val text: String,
-    val deleted: Boolean = false,
-    val read: Boolean = false,
+    var deleted: Boolean = false,
+    var read: Boolean = false,
     val messageId: Int = CorrectId.getNewId(0)
 )
 
@@ -79,40 +87,16 @@ object ChatService{
 
     fun restoreMessage(userId: Int, messageId: Int): Boolean {
         val chat = chats[userId] ?: throw NoSuchChatsFound()
-        var listRead: MutableList<Message> = chat.messages.filter { it.messageId == messageId }.toMutableList()
-        return if (listRead.size > 0) {
-            for ((index, list) in chats[userId]?.messages!!.withIndex()) {
-                if (listRead[0].messageId == list.messageId) chats[userId]?.messages?.set(index, Message(text = listRead[0].text, deleted = false, read = true, messageId = list.messageId))
-            }
-            true
-        } else {
-            false
-        }
+        return chat.messages.filter { it.messageId == messageId }.onEach { it.deleted = false }.size == 1
 
     }
 
     fun deleteMessage(userId: Int, messageId: Int): Boolean {
         val chat = chats[userId] ?: throw NoSuchChatsFound()
-        var listRead: MutableList<Message> = chat.messages.filter { it.messageId == messageId }.toMutableList()
-        if (chat.messages.size == 1) {
-            val deleteChat = deleteChat(userId)
-            return true
-        }
-        if (listRead.size > 0) {
-            for ((index, list) in chats[userId]?.messages!!.withIndex()) {
-                if (listRead[0].messageId == list.messageId) {
-                    chats[userId]?.messages?.set(index, Message(text = listRead[0].text, deleted = true, read = true, messageId = list.messageId))
-                    return true
-                }
-            }
-        } else {
-            return false
-        }
-        return false
+        return chat.messages.filter { it.messageId == messageId }.onEach { it.deleted = true }.size == 1
     }
 
     fun deleteChat(userId: Int): Boolean {
-        //val chat = chats.remove(userId)
         return chats.remove(userId) != null
     }
 
@@ -122,14 +106,7 @@ object ChatService{
 
     fun getChatMessages(userId: Int, count: Int): List<Message> {
         val chat = chats[userId] ?: throw NoSuchChatsFound()
-        var listRead: MutableList<Message> = chat.messages.filter { !it.deleted  }.takeLast(count).toMutableList()
-
-        for (tmpList in listRead) {
-            for ((index, list) in chats[userId]?.messages!!.withIndex()) {
-                if (tmpList.messageId == list.messageId) chats[userId]?.messages?.set(index, Message(text = tmpList.text, deleted = tmpList.deleted, read = true, messageId = list.messageId))
-            }
-        }
-        return chat.messages.filter { !it.deleted }.takeLast(count).toMutableList()
+        return chat.messages.filter { !it.deleted  }.takeLast(count).onEach { it.read = true }.toMutableList()
     }
 
     fun printChats() = println(chats)
