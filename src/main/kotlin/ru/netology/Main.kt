@@ -13,18 +13,24 @@ fun main() {
     ChatService.add(2, Message("Привет3"))
     ChatService.add(2, Message("Привет4"))
     println("--------------")
+    println(ChatService.getChatMessages(2, 1, 0))
     //println("Количество непрочитанных чатов: ${ChatService.getUnreadChatsCount()}")
-    println("Удаление сообщения ${ChatService.deleteMessage(2, 9)}")
+    //println("Удаление сообщения ${ChatService.deleteMessage(2, 9)}")
     println("--------------")
-    println(ChatService.getChatList())
+    println(ChatService.getChatMessages(2, 1, 1))
+    //println(ChatService.getChatList())
     println("--------------")
+    println(ChatService.getChatMessages(2, 1, 2))
     //println(ChatService.getChatMessages(2, 3))
     println("--------------")
-    println("Восстановление сообщения ${ChatService.restoreMessage(2, 9)}")
+    println(ChatService.getChatMessages(2, 1, 3))
+    //println("Восстановление сообщения ${ChatService.restoreMessage(2, 9)}")
     println("--------------")
-    println(ChatService.getChatList())
+    println(ChatService.getChatMessages(2, 1, 4))
+    //println(ChatService.getChatList())
     //ChatService.printChats()
     println("--------------")
+    //println(ChatService.getChatMessages(2, 1, 5))
     ///println("Восстановление сообщения ${ChatService.restoreMessage(2, 4)}")
     //println("--------------")
     //println(ChatService.getChatMessages(2, 3))
@@ -70,6 +76,8 @@ data class Message(
 
 class NoSuchChatsFound: Exception()
 
+class MessagesNotFoundError: Exception()
+
 object ChatService{
     private var chats = mutableMapOf<Int, Chat>()
 
@@ -104,10 +112,11 @@ object ChatService{
         return chats.map { it.value.messages.filter { !it.read } }.filter { it.isNotEmpty() }.size
     }
 
-    fun getChatMessages(userId: Int, count: Int): List<Message> {
+    fun getChatMessages(userId: Int, count: Int, startFrom: Int): List<Message> {
         val chat = chats[userId] ?: throw NoSuchChatsFound()
-        return chat.messages.filter { !it.deleted  }.takeLast(count).onEach { it.read = true }.toMutableList()
+        return chat.messages.filter { !it.deleted  }.asSequence().drop(startFrom).take(count).ifEmpty { throw MessagesNotFoundError() }.onEach { it.read = true }.toList()
     }
+
 
     fun printChats() = println(chats)
 }
