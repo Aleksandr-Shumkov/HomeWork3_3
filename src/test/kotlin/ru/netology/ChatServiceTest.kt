@@ -16,7 +16,7 @@ class ChatServiceTest {
     fun add() {
         ChatService.add(2, Message("Привет"))
         ChatService.add(3, Message("Привет33"))
-        assertEquals(1, ChatService.getChatMessages(3, 1).size)
+        assertEquals(1, ChatService.getChatMessages(3, 1, 0).size)
     }
 
     @Test
@@ -56,6 +56,17 @@ class ChatServiceTest {
     fun getChatMessages() {
         ChatService.add(2, Message("Привет", deleted = true))
         ChatService.add(2, Message("Привет111"))
-        assertEquals(listOf(Message("Привет111", false, true, 2)), ChatService.getChatMessages(2, 2))
+        assertEquals(listOf(Message("Привет111", false, true, 2)), ChatService.getChatMessages(2, 2, 0))
+    }
+
+    @Test(expected = NoSuchChatsFound::class)
+    fun shouldChatThrow() {
+        ChatService.restoreMessage(1, 1)
+    }
+
+    @Test(expected = MessagesNotFoundError::class)
+    fun shouldMessageThrow() {
+        ChatService.add(1, Message("Привет111"))
+        ChatService.getChatMessages(1, 1, 1)
     }
 }
